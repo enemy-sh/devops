@@ -7,6 +7,11 @@ on:
         description: 'Container App Environment ID'
         required: true
         type: string 
+
+      resource-group-name:
+        description: 'Resource Group Name'
+        required: true
+        type: string
       
       subscription-id:
         description: 'Azure Subscription ID'
@@ -63,6 +68,7 @@ jobs:
     env:
       TF_VAR_container_app_environment_id: ${{ inputs.container-app-environment-id }}
       TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      TF_VAR_resource_group_name: ${{ inputs.resource-group-name }}
       TF_VAR_github_token: ${{ secrets.github-token }}
       TF_VAR_sha: ${{ github.sha }}
     steps:
