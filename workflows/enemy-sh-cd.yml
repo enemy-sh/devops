@@ -2,15 +2,51 @@ name: Enemy.sh Deploy
 
 on:
   workflow_call:
-
+    inputs:
+      github-token:
+        description: 'Github Token'
+        required: true
+        type: string
+      
+      container-app-environment-id:
+        description: 'Container App Environment ID'
+        required: true
+        type: string 
+      
+      subscription-id:
+        description: 'Azure Subscription ID'
+        required: true
+        type: string
+      
+      tenant-id:
+        description: 'Azure Tenant ID'
+        required: true
+        type: string
+      
+      client-id:
+        description: 'Azure Client ID'
+        required: true
+        type: string
+      
+      client-secret:
+        description: 'Azure Client Secret'
+        required: true
+        type: string
+      
 env:
-  CR_PAT: ${{ secrets.CR_PAT }}
+  CR_PAT: ${{ inputs.github-token}}
+  ARM_CLIENT_ID: ${{ inputs.client-id }}
+  ARM_CLIENT_SECRET: ${{ inputs.client-secret }}
+  ARM_SUBSCRIPTION_ID: ${{ inputs.subscription-id }}
+  ARM_TENANT_ID: ${{ inputs.tenant-id }}
 
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
 
       - uses: docker/setup-docker-action@v4
 
@@ -26,9 +62,16 @@ jobs:
     defaults:
       run:
         working-directory: ./Terraform
+    env:
+      TF_VAR_container_app_environment_id: ${{ inputs.container-app-environment-id }}
+      TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      TF_VAR_github_token: ${{ inputs.github-token }}
+      TF_VAR_sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
         name: checkout
+        with:
+          repository: ${{ github.repository }}
       
       - name: setup terraform
         uses: hashicorp/setup-terraform@v3
@@ -36,10 +79,11 @@ jobs:
       - name: terraform init
         run: terraform init -backend-config=backend.hcl
       
-      - name: extract repository name 
+      - name: extract repository name & set tfvars
         run: |
           echo "WORKSPACE_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-          echo "TF_VAR_respository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+          echo "TF_VAR_repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+          echo "TF_VAR_subscription_id=${{ inputs.subscription-id }}" >> $GITHUB_ENV
 
       - name: select terraform workspace
         run: | 
@@ -48,12 +92,7 @@ jobs:
           fi
 
       - name: terraform plan
-        run: terraform plan --var-file=terraform.tfvar -out tfplan
-        env:
-          TF_VAR_container_app_environemnt_id: ${{ vars.CONTAINER_APP_ENVIRONMENT_ID }}
-          TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
-          TF_VAR_github_token: ${{ secrets.CR_PAT }}
-          TF_VAR_sha: ${{ github.sha }}
+        run: terraform plan --var-file=terraform.tfvars -out tfplan
         
       - name: terraform apply
-        run : terraform apply --var-file=terraform.tfvars -input=false tfplan
+        run: terraform apply --var-file=terraform.tfvars -input=false tfplan
