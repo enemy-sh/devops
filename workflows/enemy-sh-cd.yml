@@ -3,11 +3,6 @@ name: Enemy.sh Deploy
 on:
   workflow_call:
     inputs:
-      github-token:
-        description: 'Github Token'
-        required: true
-        type: string
-      
       container-app-environment-id:
         description: 'Container App Environment ID'
         required: true
@@ -18,27 +13,30 @@ on:
         required: true
         type: string
       
-      tenant-id:
-        description: 'Azure Tenant ID'
-        required: true
-        type: string
-      
       client-id:
         description: 'Azure Client ID'
         required: true
         type: string
       
+    secrets:
+      github-token:
+        description: 'Github Token'
+        required: true
+
       client-secret:
         description: 'Azure Client Secret'
         required: true
-        type: string
+      
+      tenant-id:
+        description: 'Azure Tenant ID'
+        required: true
       
 env:
-  CR_PAT: ${{ inputs.github-token}}
+  CR_PAT: ${{ secrets.github-token}}
   ARM_CLIENT_ID: ${{ inputs.client-id }}
-  ARM_CLIENT_SECRET: ${{ inputs.client-secret }}
+  ARM_CLIENT_SECRET: ${{ secrets.client-secret }}
   ARM_SUBSCRIPTION_ID: ${{ inputs.subscription-id }}
-  ARM_TENANT_ID: ${{ inputs.tenant-id }}
+  ARM_TENANT_ID: ${{ secrets.tenant-id }}
 
 jobs:
   build_and_push:
@@ -65,7 +63,7 @@ jobs:
     env:
       TF_VAR_container_app_environment_id: ${{ inputs.container-app-environment-id }}
       TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
-      TF_VAR_github_token: ${{ inputs.github-token }}
+      TF_VAR_github_token: ${{ secrets.github-token }}
       TF_VAR_sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
