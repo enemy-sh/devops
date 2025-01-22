@@ -71,6 +71,7 @@ jobs:
       TF_VAR_resource_group_name: ${{ inputs.resource-group-name }}
       TF_VAR_subscription_id: ${{ inputs.subscription-id }}
       TF_VAR_github_token: ${{ secrets.github-token }}
+      TF_VAR_registry_username: ${{ github.actor }}
       TF_VAR_sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
