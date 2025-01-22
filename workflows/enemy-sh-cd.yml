@@ -34,7 +34,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: terraform init
-        run: terraform init -backend-config=backend.tfvars
+        run: terraform init -backend-config=backend.hcl
       
       - name: extract repository name 
         run: |
