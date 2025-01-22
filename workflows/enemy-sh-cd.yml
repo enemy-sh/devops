@@ -1,0 +1,59 @@
+name: Enemy.sh Deploy
+
+on:
+  workflow_call:
+
+env:
+  CR_PAT: ${{ secrets.CR_PAT }}
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-docker-action@v4
+
+      - name: build & push
+        run: |
+          echo $CR_PAT | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    defaults:
+      run:
+        working-directory: ./Terraform
+    steps:
+      - uses: actions/checkout@v4
+        name: checkout
+      
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: terraform init
+        run: terraform init -backend-config=backend.tfvars
+      
+      - name: extract repository name 
+        run: |
+          echo "WORKSPACE_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+          echo "TF_VAR_respository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: select terraform workspace
+        run: | 
+          if ! terraform workspace select $WORKSPACE_NAME 2>/dev/null; then
+            terraform workspace new $WORKSPACE_NAME
+          fi
+
+      - name: terraform plan
+        run: terraform plan --var-file=terraform.tfvar -out tfplan
+        env:
+          TF_VAR_container_app_environemnt_id: ${{ vars.CONTAINER_APP_ENVIRONMENT_ID }}
+          TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          TF_VAR_github_token: ${{ secrets.CR_PAT }}
+          TF_VAR_sha: ${{ github.sha }}
+        
+      - name: terraform apply
+        run : terraform apply --var-file=terraform.tfvars -input=false tfplan
