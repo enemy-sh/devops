@@ -8,6 +8,11 @@ on:
         required: true
         type: string 
 
+      container-app-environment-static-ip-address:
+        description: 'Container App Environment Static IP Address'
+        required: true
+        type: string
+
       resource-group-name:
         description: 'Resource Group Name'
         required: true
@@ -66,6 +71,7 @@ jobs:
       run:
         working-directory: ./Terraform
     env:
+      TF_VAR_container_app_environment_static_ip_address: ${{ inputs.container-app-environment-static-ip-address }}
       TF_VAR_container_app_environment_id: ${{ inputs.container-app-environment-id }}
       TF_VAR_image: ghcr.io/${{ github.repository }}:${{ github.sha }}
       TF_VAR_resource_group_name: ${{ inputs.resource-group-name }}
