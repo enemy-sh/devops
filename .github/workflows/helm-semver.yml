@@ -121,5 +121,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.git-token }}
         run: |
-          gh auth login --with-token <<< "${{ secrets.git-token }}"
           gh release create ${{ steps.next_version.outputs.new_version }} --title "${{ steps.next_version.outputs.new_version }}" --notes "$(cat CHANGELOG.md)"
