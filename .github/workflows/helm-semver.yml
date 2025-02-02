@@ -5,7 +5,7 @@ on:
     inputs:
       chartPath:
         description: 'Path to the Helm chart directory'
-        required: true
+        required: false
         type: string
         default: '.'
       chartFile:
