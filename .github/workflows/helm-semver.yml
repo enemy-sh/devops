@@ -50,7 +50,11 @@ jobs:
           MAJOR=$(echo "${LATEST_TAG}" | cut -d'.' -f1 | sed 's/v//')
           MINOR=$(echo "${LATEST_TAG}" | cut -d'.' -f2)
           PATCH=$(echo "${LATEST_TAG}" | cut -d'.' -f3)
-          COMMIT_MESSAGES=$(git log ${LATEST_TAG}..HEAD --format=%B)
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMIT_MESSAGES=$(git log HEAD --format=%B)
+          else
+            COMMIT_MESSAGES=$(git log ${LATEST_TAG}..HEAD --format=%B)
+          fi
           if echo "$COMMIT_MESSAGES" | grep -q "!major"; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
@@ -91,7 +95,11 @@ jobs:
         run: |
           LATEST_TAG="${{ steps.get_version.outputs.latest_tag }}"
           NEW_VERSION="${{ steps.next_version.outputs.new_version }}"
-          NEW_LOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s (%h)")
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            NEW_LOG=$(git log HEAD --pretty=format:"* %s (%h)")
+          else
+            NEW_LOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s (%h)")
+          fi
           { echo "## ${NEW_VERSION} - $(date +'%Y-%m-%d')"; echo ""; echo "$NEW_LOG"; echo ""; } > new_changelog.md
           if [ -f CHANGELOG.md ]; then cat CHANGELOG.md >> new_changelog.md; fi
           mv new_changelog.md CHANGELOG.md
