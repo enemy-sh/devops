@@ -111,23 +111,18 @@ jobs:
           git commit -m "Update CHANGELOG for ${{ steps.next_version.outputs.new_version }}" || echo "No changes to commit"
           git push origin ${{ inputs.branch }}
         
-      - name: Fetch Latest State Before Release
+      - name: Get Latest Commit Hash
+        id: latest_commit
         run: |
-          git fetch origin ${{ inputs.branch }}
-          git reset --hard origin/${{ inputs.branch }}
-
-      - name: Upload Helm Chart Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: helm-chart
-          path: "*.tgz"
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "latest_commit=$COMMIT_HASH" >> $GITHUB_OUTPUT
+          echo "Latest commit hash: $COMMIT_HASH"
 
       - name: Create GitHub Release via GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.git-token }}
         run: |
-          LATEST_COMMIT=$(git rev-parse origin/${{ inputs.branch }})
           gh release create ${{ steps.next_version.outputs.new_version }} \
             --title "${{ steps.next_version.outputs.new_version }}" \
             --notes "$(cat CHANGELOG.md)" \
-            --target "$LATEST_COMMIT"
+            --target "${{ steps.latest_commit.outputs.latest_commit }}"
