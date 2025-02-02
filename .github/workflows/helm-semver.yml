@@ -126,4 +126,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.git-token }}
         run: |
-          gh release create ${{ steps.next_version.outputs.new_version }} --title "${{ steps.next_version.outputs.new_version }}" --notes "$(cat CHANGELOG.md)"
+          LATEST_COMMIT=$(git rev-parse origin/${{ inputs.branch }})
+          gh release create ${{ steps.next_version.outputs.new_version }} \
+            --title "${{ steps.next_version.outputs.new_version }}" \
+            --notes "$(cat CHANGELOG.md)" \
+            --target "$LATEST_COMMIT"
