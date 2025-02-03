@@ -96,9 +96,9 @@ jobs:
           LATEST_TAG="${{ steps.get_version.outputs.latest_tag }}"
           NEW_VERSION="${{ steps.next_version.outputs.new_version }}"
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
-            NEW_LOG=$(git log HEAD --pretty=format:"* %s (%h)")
+            NEW_LOG=$(git log HEAD --pretty=format:"* %s (%h)" | grep -v "Update CHANGELOG")
           else
-            NEW_LOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s (%h)")
+            NEW_LOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"* %s (%h)" | grep -v "Update CHANGELOG")
           fi
           { echo "## ${NEW_VERSION} - $(date +'%Y-%m-%d')"; echo ""; echo "$NEW_LOG"; echo ""; } > new_changelog.md
           if [ -f CHANGELOG.md ]; then cat CHANGELOG.md >> new_changelog.md; fi
